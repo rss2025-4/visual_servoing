@@ -66,6 +66,7 @@ class ParkingController(Node):
         return compute(scorer)
 
     def relative_cone_callback(self, msg: ConeLocation):
+        print("relative_cone_callback!")
         self.relative_x = msg.x_pos
         self.relative_y = msg.y_pos
 

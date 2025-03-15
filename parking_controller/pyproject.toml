@@ -6,7 +6,7 @@ package-mode = false
 python = ">=3.10, <3.11"
 
 # libracecar = { path = "/home/dockeruser/racecar_ws/src/libracecar/", develop = true }
-libracecar = { git = "git@github.com:rss2025-4/libracecar.git" }
+libracecar = { git = "https://github.com/rss2025-4/libracecar.git" }
 
 [tool.isort]
 profile = "black"

@@ -1,0 +1,14 @@
+services:
+  racecar:
+    build:
+      context: $GITHUB_WORKSPACE/libracecar
+      dockerfile: $GITHUB_WORKSPACE/libracecar/docker/Dockerfile
+      args:
+        BASE_IMAGE: sebagarc/racecar2
+        DOCKER_UID: $DOCKER_UID
+        DOCKER_GID: $DOCKER_GID
+    image: local/racecar-sim
+    privileged: true
+    entrypoint: /home/dockeruser/racecar_ws/src/parking_controller/tests/run_tests_actions.sh
+    volumes:
+      - $GITHUB_WORKSPACE:/home/dockeruser/racecar_ws/src
