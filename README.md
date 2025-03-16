@@ -5,7 +5,9 @@
 |---------------|----------------------------------------------------------------------------|
 | Briefing    | Monday, March 17th 3:00 - 5:00 PM EST     |
 | Code Pushed to Team Website | Monday, March 17th at 11:59 PM|
+| Checkoff | Wedensday March 19th |
 | [Team Member Assessment](https://docs.google.com/forms/d/e/1FAIpQLSfnnSIP1FSbPQzoFKLAvxCpH1qmOnCrfsf6qtVDNdU5lJED9Q/viewform?usp=dialog) | Wednesday, March 19th at 11:59PM EST |
+
 
 ## Table of Contents
 - [Introduction](https://github.com/mit-rss/visual_servoing#introduction)
@@ -167,7 +169,11 @@ Before launching the camera, we need to add two lines to the `run_rostorch.sh` f
 
 	
 3. Spin up the docker using `./run_rostorch.sh`
+<<<<<<< HEAD
 4. Run `unset DISPLAY`. Additionally, because this command does not propagate to other terminals, add the line `unset DISPLAY` to your `~/.bashrc` file (i.e. using `nano ~/.bashrc`). All comamnds in `~/.bashrc` run every time you open a new terminal; thus, adding `unset DISPLAY` to `~/.bashrc` prevents you from having to run this command every time you open a new terminal and want to use the ZED. `unset DISPLAY` unsets the `DISPLAY` environment variable, which is necessary for running the ZED in a "headless" environment (i.e. via SSH without display port forwarding).
+=======
+4. Run `unset DISPLAY` in the terminal that you will use to run camera 
+>>>>>>> master
 7. Run the respective command for your camera. For silver cameras use `zed`, for black cameras use `zed2`.
 
 ```bash

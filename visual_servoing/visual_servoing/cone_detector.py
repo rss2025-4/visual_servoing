@@ -49,7 +49,11 @@ class ConeDetector(Node):
         center = (center_w, center_h)
         debug_msg = self.bridge.cv2_to_imgmsg(image, "bgr8")
         self.debug_pub.publish(debug_msg)
-        self.cone_pub.publish(ConeLocationPixel(x=center[0], y=center[1]))
+        
+        msg = ConeLocationPixel()
+        msg.u = float(center[0])
+        msg.v = float(center[1])
+        self.cone_pub.publish(msg)
         
 def main(args=None):
     rclpy.init(args=args)
