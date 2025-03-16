@@ -92,7 +92,7 @@ def cd_sift_ransac(img, template):
 		# Return bounding box of area 0 if no match found
 		return ((0,0), (0,0))
 
-def cd_template_matching(img, template, img_path, template_path):
+def cd_template_matching(img, template, img_path=None, template_path=None):
 	"""
 	Implement the cone detection using template matching algorithm
 	Input:

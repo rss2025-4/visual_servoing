@@ -108,7 +108,7 @@ def cd_color_segmentation(img, template):
 
 	cv2.rectangle(img, (x_new, y_new), (x_new + w_new, y_new + h_new), 128, 2)
 
-	image_print(img)
+	# image_print(img)
 	bounding_box = ((x_new, y_new), (x_new + w_new, y_new + h_new))
 	
 
