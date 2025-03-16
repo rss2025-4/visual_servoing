@@ -43,6 +43,7 @@ def iou_score(bbox1, bbox2):
     
     # Check if the bounding boxes are disjoint (no intersection)
     if x_int_2 - x_int_1 < 0 or y_int_2 - y_int_1 < 0:
+        print("No intersection, failed?")
         area_int = 0
     else:
         area_int = (x_int_2 - x_int_1 + 1) * (y_int_2 - y_int_1 + 1)
@@ -53,7 +54,7 @@ def iou_score(bbox1, bbox2):
 
     # Compute area of union
     area_union = float(area_bbox1 + area_bbox2 - area_int)
-
+    print("evaluation metrics", area_int, area_union, f"this is the score {area_int / area_union}")
     # Compute and return IoU score
     score = area_int / area_union
 
@@ -93,7 +94,13 @@ def test_algorithm(detection_func, csv_file_path, template_file_path, swap=False
                 template = cv2.imread(img_path, 0)
                 img = cv2.imread(template_file_path)
             # Detection bbox
-            bbox_est = detection_func(img, template)
+            # ! INFO : The template matching function is not returning the correct bounding box
+            # so im passing in the paths 
+            if detection_func == cd_template_matching:
+                bbox_est = detection_func(img, template, img_path, template_file_path)
+            else:   
+                
+                bbox_est = detection_func(img, template)
             score = iou_score(bbox_est, bbox_true)
             
             # Add score to dict
