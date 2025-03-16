@@ -50,6 +50,7 @@ def cd_sift_ransac(img, template):
 	# Find matches
 	bf = cv2.BFMatcher()
 	matches = bf.knnMatch(des1,des2,k=2)
+	image_print(img)
 
 	# Find and store good matches
 	good = []
@@ -71,7 +72,8 @@ def cd_sift_ransac(img, template):
 		pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
 
 		########## YOUR CODE STARTS HERE ##########
-
+		# match_src_pts = src_pts[matchesMask == 1]
+		# match_dst_pts = dst_pts[matchesMask == 1]
 		bounding_box = cv2.perspectiveTransform(pts, M)
 		print(f"[SIFT] matches: ", len(good), "bounding box: ", bounding_box)
 		# Extract x and y coordinates from the transformed corners
@@ -81,7 +83,10 @@ def cd_sift_ransac(img, template):
 
 		x_min, x_max = int(np.min(x)), int(np.max(x))
 		y_min, y_max = int(np.min(y)), int(np.max(y))
+		cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 3)
+		image_print(img)
 		########### YOUR CODE ENDS HERE ###########
+		
 
 		# Return bounding box
 		return ((x_min, y_min), (x_max, y_max))
