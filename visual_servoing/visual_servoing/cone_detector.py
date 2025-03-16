@@ -43,7 +43,7 @@ class ConeDetector(Node):
 
         image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
 
-        box = cd_color_segmentation(image)
+        box = cd_color_segmentation(image, None)
         center_w = int((box[0][0] + (box[1][0]-box[0][0])/2))
         center_h = int((box[0][1] + (box[1][1]-box[0][1])/2))
         center = (center_w, center_h)
