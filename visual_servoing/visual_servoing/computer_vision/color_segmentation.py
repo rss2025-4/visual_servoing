@@ -38,7 +38,7 @@ def cd_color_segmentation(img, template):
 	########## YOUR CODE STARTS HERE ##########
 
 	# Best test score(so far): [0,225,140] --> (30,300,300)
-	orange_lower = np.array([0,225,140])
+	orange_lower = np.array([0,185,140]) #225
 	orange_upper = np.array([30,300,300])
 	bounding_box = ((0,0),(0,0))
 	
@@ -106,7 +106,7 @@ def cd_color_segmentation(img, template):
 
 	# image_print(segmented_mask)
 
-	contours, _ = cv2.findContours(segmented_mask,  
+	# contours, _ = cv2.findContours(segmented_mask,  
 	contours, _ = cv2.findContours(segmented_mask,  
     cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 	largest_contour = max(contours, key=cv2.contourArea)

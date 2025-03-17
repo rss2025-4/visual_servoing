@@ -27,7 +27,7 @@ class ParkingController(Node):
     def __init__(self):
         super().__init__("parking_controller")
 
-        self.declare_parameter("drive_topic", "/drive")
+        self.declare_parameter("drive_topic", "/vesc/high_level/input/nav_0")
         DRIVE_TOPIC = self.get_parameter(
             "drive_topic"
         ).value  # set in launch file; different for simulator vs racecar
@@ -42,7 +42,7 @@ class ParkingController(Node):
             ConeLocation, "/relative_cone", self.relative_cone_callback, 1
         )
 
-        self.parking_distance = 0.75  # meters; try playing with this number!
+        self.parking_distance = 0.05  # meters; try playing with this number!
         self.relative_x = 0
         self.relative_y = 0
 
@@ -60,7 +60,7 @@ class ParkingController(Node):
     def plan(self, msg: ConeLocation) -> tuple[path, plot_ctx]:
         scorer = compute_score(
             parking_distance=self.parking_distance,
-            relative_x=msg.x_pos,
+            relative_x=min(msg.x_pos, 0.1),
             relative_y=msg.y_pos,
         )
         return compute(scorer)
@@ -106,6 +106,7 @@ class ParkingController(Node):
             if abs(speed) < min_speed:
                 speed = min_speed if speed > 0 else -min_speed
 
+            # speed = min(max(speed, -1.0), 1.0)
             speed = min(max(speed, -1.0), 1.0)
             # if math.isnan(ang):
             #     print("nan!")

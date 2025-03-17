@@ -53,7 +53,7 @@ class HomographyTransformer(Node):
         self.cone_px_sub = self.create_subscription(ConeLocationPixel, "/relative_cone_px", self.cone_detection_callback, 1)
 
         # TESTING - gets mouse clicked point in rqt image view
-        self.mouse_px_sub = self.create_subscription(Point, "/zed/zed_node/rgb/image_rect_color_mouse_left", self.mouse_detection_callback, 1)
+        # self.mouse_px_sub = self.create_subscription(Point, "/zed/zed_node/rgb/image_rect_color_mouse_left", self.mouse_detection_callback, 1)
         
         # test_timer_period = 1 / 20  # seconds, 60 Hz
         # self.test_timer = self.create_timer(test_timer_period, self.test_pub_callback)
@@ -94,16 +94,16 @@ class HomographyTransformer(Node):
         x, y = self.transformUvToXy(u, v)
 
         print("x,y in cone callback: ", x,y)
-
+        constrained_x = max(x,0.0) # line following
         #Publish relative xy position of object in real world
         relative_xy_msg = ConeLocation()
-        relative_xy_msg.x_pos = x
+        relative_xy_msg.x_pos = constrained_x
         relative_xy_msg.y_pos = y
-
+        print("constrained x,y in cone callback: ", max(x,0.0),y)
         self.cone_pub.publish(relative_xy_msg)
 
         # RVIZ
-        self.draw_marker(x, y, "/cone_marker")
+        self.draw_marker(constrained_x, y, "/cone_marker")
 
     def mouse_detection_callback(self, msg):
         self.get_logger().info("in Homography Transformer Mouse Detection Callback")
@@ -124,7 +124,7 @@ class HomographyTransformer(Node):
         self.cone_pub.publish(relative_xy_msg)
 
         # RVIZ
-        # self.draw_marker(x, y, "/cone_marker")
+        self.draw_marker(x, y, "/cone_marker")
 
 
     def transformUvToXy(self, u, v):
@@ -167,6 +167,7 @@ class HomographyTransformer(Node):
         marker.pose.position.x = cone_x
         marker.pose.position.y = cone_y
         self.marker_pub.publish(marker)
+        print("published cone")
 
 def main(args=None):
     rclpy.init(args=args)
