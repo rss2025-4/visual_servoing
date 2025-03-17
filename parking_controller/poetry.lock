@@ -602,7 +602,7 @@ optional = false
 python-versions = ">=3.10, <3.11"
 groups = ["main"]
 files = []
-develop = true
+develop = false
 
 [package.dependencies]
 beartype = "^0.20.0"
@@ -622,8 +622,10 @@ typeguard = "^4.4.2"
 unshare = "^0.22"
 
 [package.source]
-type = "directory"
-url = "../libracecar"
+type = "git"
+url = "https://github.com/rss2025-4/libracecar.git"
+reference = "HEAD"
+resolved_reference = "bfbd96acfa77ad51314be130fad85e95f7e7dc0d"
 
 [[package]]
 name = "matplotlib"
@@ -1476,4 +1478,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.11"
-content-hash = "279161d602bf379480f32288195059b4d08160c055f5ca33fd0ce2fa610be847"
+content-hash = "fe0956cce3795790a65de05a37c9b1e41d35f50709c2ae76f5e9e94e89c968d1"
