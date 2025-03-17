@@ -37,59 +37,59 @@ def cd_color_segmentation(img, template):
 	########## YOUR CODE STARTS HERE ##########
 
 	# Best test score(so far): [0,225,140] --> (30,300,300)
-	orange_lower = np.array([0,100,140])
+	orange_lower = np.array([0,225,140])
 	orange_upper = np.array([30,300,300])
 	bounding_box = ((0,0),(0,0))
 
 	image_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-	image_print(img)
-	image_print(image_hsv)
+	# image_print(img)
+	# image_print(image_hsv)
 	# adjust brightness
 	h, s, v = cv2.split(image_hsv)
 	clahe = cv2.createCLAHE(clipLimit=2.03, tileGridSize=(8, 8))
 	v_eq = clahe.apply(v)
 	hsv_eq = cv2.merge([h, s, v_eq])
-	image_print(hsv_eq)
+	# image_print(hsv_eq)
 	image_orange = cv2.inRange(hsv_eq, orange_lower, orange_upper)
-	image_print(image_orange)
+	# image_print(image_orange)
 	kernel = np.ones((3,3), np.uint8)
 	kernel = np.ones((3,3), np.uint8)
 	for _ in range(20):
 		image_orange = cv2.morphologyEx(image_orange, cv2.MORPH_OPEN, kernel)
 		image_orange = cv2.morphologyEx(image_orange, cv2.MORPH_CLOSE, kernel)
 	# image_print(image_orange)
-	# image_orange = cv2.dilate(image_orange, kernel, iterations=11)
-	# # image_print(image_orange)
-	# # distance transform
-	# dist_transform = cv2.distanceTransform(image_orange, cv2.DIST_L2, 5)
-	# ret, sure_fg = cv2.threshold(dist_transform, 0.7 * dist_transform.max(), 255, 0)
-	# sure_fg = np.uint8(sure_fg)
-	# # image_print(sure_fg)
-    # # overlap
-	# unknown = cv2.subtract(image_orange, sure_fg)
-	# # image_print(unknown)
-    # # connected
-	# _, markers = cv2.connectedComponents(sure_fg)
-	# markers = markers + 1 
-	# markers[unknown == 255] = 0
-	# # image_print(sure_fg)
-    # # watershed
-	# markers = cv2.watershed(img, markers)
-	# img[markers == -1] = [255, 0, 0] 
+	image_orange = cv2.dilate(image_orange, kernel, iterations=11)
+	# image_print(image_orange)
+	# distance transform
+	dist_transform = cv2.distanceTransform(image_orange, cv2.DIST_L2, 5)
+	ret, sure_fg = cv2.threshold(dist_transform, 0.7 * dist_transform.max(), 255, 0)
+	sure_fg = np.uint8(sure_fg)
+	# image_print(sure_fg)
+    # overlap
+	unknown = cv2.subtract(image_orange, sure_fg)
+	# image_print(unknown)
+    # connected
+	_, markers = cv2.connectedComponents(sure_fg)
+	markers = markers + 1 
+	markers[unknown == 255] = 0
+	# image_print(sure_fg)
+    # watershed
+	markers = cv2.watershed(img, markers)
+	img[markers == -1] = [255, 0, 0] 
 
-	# segmented_mask = np.zeros_like(image_orange)
-	# segmented_mask[markers > 1] = 255
+	segmented_mask = np.zeros_like(image_orange)
+	segmented_mask[markers > 1] = 255
 
 	# # image_print(segmented_mask)
 
-	contours, _ = cv2.findContours(image_orange,  
+	contours, _ = cv2.findContours(segmented_mask,  
     cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 	largest_contour = max(contours, key=cv2.contourArea)
 	# print(contours[0].shape)
 	cv2.drawContours(img, contours, -1, (0, 255, 0), 3) 
 	# image_print(segmented_mask)
-	image_print(img)
+	# image_print(img)
 	# print(len(contours))
 	x, y, w, h = cv2.boundingRect(largest_contour)
 	center_x = x + w / 2
@@ -117,8 +117,8 @@ def cd_color_segmentation(img, template):
 	########### YOUR CODE ENDS HERE ###########
 
 	return bounding_box
-test_im = cv2.imread('/Users/paul/racecar_docker/home/racecar_ws/src/visual_servoing/visual_servoing/visual_servoing/computer_vision/test_images_cone/tape_test.png')
-cd_color_segmentation(test_im, None)
+# test_im = cv2.imread('/Users/paul/racecar_docker/home/racecar_ws/src/visual_servoing/visual_servoing/visual_servoing/computer_vision/test_images_cone/tape_test.png')
+# cd_color_segmentation(test_im, None)
 
 
 
@@ -149,5 +149,5 @@ def optimize():
 		print("Subprocess timed out.")
 
 if __name__ == '__main__':
-	# print(optimize())
+	print(optimize())
 	pass
