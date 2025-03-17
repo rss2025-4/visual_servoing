@@ -57,11 +57,11 @@ class ParkingController(Node):
         ctx.execute(m)
         self.visualization_pub.publish(m)
 
-    def plan(self) -> tuple[path, plot_ctx]:
+    def plan(self, msg: ConeLocation) -> tuple[path, plot_ctx]:
         scorer = compute_score(
             parking_distance=self.parking_distance,
-            relative_x=self.relative_x,
-            relative_y=self.relative_y,
+            relative_x=msg.x_pos,
+            relative_y=msg.y_pos,
         )
         return compute(scorer)
 
@@ -73,7 +73,7 @@ class ParkingController(Node):
         print("cone", self.relative_x, self.relative_y)
 
         _start_time = time.time()
-        plan, ctx = self.plan()
+        plan, ctx = self.plan(msg)
         print("Elapsed time", time.time() - _start_time)
 
         # print(plan)
@@ -126,29 +126,20 @@ class ParkingController(Node):
 
         drive_cmd.drive = drive
 
-        #################################
-
-        # YOUR CODE HERE
-        # Use relative position and your control law to set drive_cmd
-
-        #################################
-
         self.drive_pub.publish(drive_cmd)
-        self.error_publisher()
+        self.error_publisher(msg)
 
-    def error_publisher(self):
+    def error_publisher(self, msg: ConeLocation):
         """
         Publish the error between the car and the cone. We will view this
         with rqt_plot to plot the success of the controller
         """
         error_msg = ParkingError()
-
-        #################################
-
-        # YOUR CODE HERE
-        # Populate error_msg with relative_x, relative_y, sqrt(x^2+y^2)
-
-        #################################
+        x_pos = msg.x_pos
+        y_pos = msg.y_pos
+        error_msg.x_error = abs(self.parking_distance - msg.x_pos)
+        error_msg.y_error = abs(msg.y_pos)
+        error_msg.distance_error = error_msg.x_error**2 + error_msg.y_error**2
 
         self.error_pub.publish(error_msg)
 
