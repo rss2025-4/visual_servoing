@@ -53,7 +53,7 @@ class HomographyTransformer(Node):
         self.cone_px_sub = self.create_subscription(ConeLocationPixel, "/relative_cone_px", self.cone_detection_callback, 1)
 
         # TESTING - gets mouse clicked point in rqt image view
-        # self.mouse_px_sub = self.create_subscription(Point, "/zed/zed_node/rgb/image_rect_color_mouse_left", self.mouse_detection_callback, 1)
+        self.mouse_px_sub = self.create_subscription(Point, "/zed/zed_node/rgb/image_rect_color_mouse_left", self.mouse_detection_callback, 1)
         
         # test_timer_period = 1 / 20  # seconds, 60 Hz
         # self.test_timer = self.create_timer(test_timer_period, self.test_pub_callback)

@@ -13,7 +13,7 @@ from vs_msgs.msg import ConeLocationPixel
 
 # import your color segmentation algorithm; call this function in ros_image_callback!
 from computer_vision.color_segmentation import cd_color_segmentation
-from computer_vision.sift_template import cd_template_matching
+# from computer_vision.sift_template import cd_template_matching
 
 
 class ConeDetector(Node):
@@ -43,9 +43,12 @@ class ConeDetector(Node):
         # convert it to the car frame.
 
         image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
-        path = "computer_vision/test_images_cone/cone_template.png"
-        template = cv2.imread(path, 0)
-        box = cd_template_matching(image, template) 
+        # self.get_logger().info(f"hi{image}")
+        self.get_logger().info("got image")
+
+        # path = "computer_vision/test_images_cone/cone_template.png"
+        # template = cv2.imread(path, 0)
+        box = cd_color_segmentation(image, None) #cd_template_matching(image, template) 
         #cd_color_segmentation(image, None)
         center_w = int((box[0][0] + (box[1][0]-box[0][0])/2))
         center_h = int((box[0][1] + (box[1][1]-box[0][1])/2))
