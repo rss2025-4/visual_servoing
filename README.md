@@ -25,9 +25,9 @@ In one terminal: `ros2 run visual_servoing homography_transformer`
 #### Cone Detector
 Another terminal: `ros2 run visual_servoing cone_detector` 
 
-Side note: we can make a launch file to launch both of these (to-do item)
+Side note: we can make a launch file to launch both homography and cone detector nodes these (to-do item)
 
-### Parking Controller
+#### Parking Controller
 ```bash
 ~/repos/dotfiles-alan/scripts/docker_attach.py # opens docker 
 cd ~/racecar_ws/src/visual_servoing/parking_controller # basically where the package is
@@ -71,7 +71,7 @@ We aren't using this for the final system, but maybe add a description of the ke
 7. After clicking on a point in the image (make sure that it is on the ground plane, aka floor). You can check that the point was clicked by opening a terminal and `ros2 topic echo /zed/zed_node/rgb/image_rect_color_mouse_left`. The homography_transformer node should print the "x, y" values representing distances in meters.
 8. Use a measuring tape to verify the actual distances from camera to the selected point. Remember x is forward and y is to the left relative to the racecar. 
 
-**What to change / what to do if not working: **
+**What to change / what to do if not working:**
 - if the homography transformer is not returning the right physical distances, the camera may need to be re-calibrated by taking more pixel and physical distance correspondences and changing the `PTS_IMAGE_PLANE` and `PTS_GROUND_PLANE` points.
 - possible reasons for failure: camera moved significantly (remember the key assumption with this calculation is that the camera relative to the floor plane are fixed)
 
