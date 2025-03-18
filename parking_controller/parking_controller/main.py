@@ -1,6 +1,7 @@
 import math
 import time
 from dataclasses import dataclass
+from pathlib import Path
 
 import draccus
 import numpy as np
@@ -16,6 +17,8 @@ from parking_controller.core import compute, compute_score
 
 np.set_printoptions(precision=10, suppress=True)
 
+is_sim = Path("/home/sim_ws").exists()
+
 
 @dataclass
 class parkingcontroller_config:
@@ -24,7 +27,7 @@ class parkingcontroller_config:
     # is close to (parking_distance, 0.0), then stops.
     parking_distance: float = 0.75
     # publish drive commands to this topic
-    drive_topic: str = "/drive"
+    drive_topic: str = "/drive" if is_sim else "/vesc/high_level/input/nav_0"
 
 
 class ParkingController(Node):
@@ -146,8 +149,8 @@ class ParkingController(Node):
         error_msg = ParkingError()
         x_pos = msg.x_pos
         y_pos = msg.y_pos
-        error_msg.x_error = abs(self.cfg.parking_distance - msg.x_pos)
-        error_msg.y_error = abs(msg.y_pos)
+        error_msg.x_error = abs(self.cfg.parking_distance - x_pos)
+        error_msg.y_error = abs(y_pos)
         error_msg.distance_error = error_msg.x_error**2 + error_msg.y_error**2
 
         self.error_pub.publish(error_msg)
