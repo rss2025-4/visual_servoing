@@ -23,6 +23,7 @@ class parkingcontroller_config:
     # in other words, controller moves the car until relative_cone it recieves
     # is close to (parking_distance, 0.0), then stops.
     parking_distance: float = 0.75
+    # publish drive commands to this topic
     drive_topic: str = "/drive"
 
 
