@@ -40,7 +40,7 @@ python run.py  # runs parking_controller node
 - Use display
 	- in a terminal, ssh -L 6081:localhost:6081 racecar@192.168.1.21
 	- go to: http://localhost:6081/vnc.html?resize=remote
-- To see if camera is working:  In the terminal: `rqt_image_view` then go to Plug-ins > Visualizations > Image_viewer. Then select `/zed/zed_node/rgb/image_rect_color` as the image topic.
+- To see if camera is working:  In the terminal: `rqt` then go to Plug-ins > Visualizations > Image_viewer. Then select `/zed/zed_node/rgb/image_rect_color` as the image topic.
 - Cone-detector: Using rviz2, we can also Add (bottom left) a topic to view: select the `/cone_debug_img` topic which shows bounding box and what the cone detector sees
 - Homography-transformer: prints the x,y distance values in the terminal that the node was run in. Using rviz2, we can also add the `/cone_marker` topic. make sure we are in the `cone_marker` frame, add the TF, view in the zed camera link fixed frame, to see where the cone is relative to the camera. 
 - Parking-controller: prints the speed and angle nav commands
@@ -64,7 +64,7 @@ We aren't using this for the final system, but maybe add a description of the ke
 - Applies homography matrix and scaling to pixel point to output x,y distance
 **Debug / Individual Module Test**
 1. Make sure camera is running and then open display () then open terminal in the vnc
-2. In the terminal: `rqt_image_view` then go to Plug-ins > Visualizations > Image
+2. In the terminal: `rqt` then go to Plug-ins > Visualizations > Image
 3. Select `/zed/zed_node/rgb/image_rect_color` as the image topic. Below that option, select the check mark so that `/zed/zed_node/rgb/image_rect_color_mouse_left` which allows for a mouse clicked point on the image in `rqt_image_view` to be published.
 5. In the `homography_transformer.py`, make sure `self.mouse_px_sub = self.create_subscription(Point, "/zed/zed_node/rgb/image_rect_color_mouse_left", self.mouse_detection_callback, 1)` is uncommented. This allows for clicking on a point and then printing the homography result in the callback.
 6. Run the node `ros2 run visual_servoing homography_transformer` in a terminal (in docker).
