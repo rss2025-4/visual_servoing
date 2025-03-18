@@ -1,5 +1,6 @@
 import math
 import os
+import random
 import time
 
 import numpy as np
@@ -11,7 +12,7 @@ from ackermann_msgs.msg import AckermannDriveStamped
 from chex import dataclass
 from geometry_msgs.msg import Pose, PoseStamped, Transform
 from rclpy.node import Node
-from rclpy.time import Time
+from rclpy.time import Duration, Time
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 from tf_transformations import euler_from_quaternion
@@ -51,32 +52,23 @@ class _ok(BaseException):
 
 
 class ParkingTest(Node):
-    def __init__(self, cone_x: float, cone_y: float):
+    def __init__(self):
         super().__init__("test_parking")
-        self.cone_x = cone_x
-        self.cone_y = cone_y
 
         self.tfBuffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tfBuffer, self)
+        self.br = tf2_ros.TransformBroadcaster(self)
 
         # not needed, also race
         # self.pose_pub = self.create_publisher(Pose, "pose", 1)
         # self.pose_pub.publish(pose_2d(0.0, 0.0, 0.0))
 
         self.cone_pub = self.create_publisher(ConeLocation, "/relative_cone", 1)
-        self.cone_pub_timer = self.create_timer(0.1, self.publish_cone)
+        self._update_timer = self.create_timer(0.02, self.update_target)
 
         self.cone_marker_pub = self.create_publisher(Marker, "/cone_marker", 1)
 
-        self.static_br = tf2_ros.StaticTransformBroadcaster(self)
-
-        map_to_cone = Transform()
-        map_to_cone.translation.x = cone_x
-        map_to_cone.translation.y = cone_y
-
-        self.static_br.sendTransform(
-            se3_to_tf(tf_to_se3(map_to_cone), Time(), "map", "cone")
-        )
+        # self.static_br = tf2_ros.StaticTransformBroadcaster(self)
 
         self.last_drive = AckermannDriveStamped()
         self.create_subscription(
@@ -86,12 +78,44 @@ class ParkingTest(Node):
         self.start_time = time.time()
         self.first_drive_time: float | None = None
         self.prev_time = self.start_time
-        self._timer = self.create_timer(0.001, self.update)
+        # self._metrics_timer = self.create_timer(0.001, self.update_metrics)
 
         self.distance_traveled = 0.0
         self.time_rest = 0.0
 
-    def draw_marker(self):
+    def update_target(self):
+        ang = (time.time() - self.start_time) / 4
+
+        cone_x = math.cos(ang) * 3 + random.gauss(0, 1) / 10
+        cone_y = math.sin(ang) * 3 + random.gauss(0, 1) / 10
+
+        # cone_x = (time.time() - self.start_time) / 2 + random.gauss(0, 1) / 10
+        # cone_y = random.gauss(0, 1) / 10
+
+        map_to_cone = Transform()
+        map_to_cone.translation.x = cone_x
+        map_to_cone.translation.y = cone_y
+
+        map_to_cone_mat = tf_to_se3(map_to_cone)
+        self.br.sendTransform(
+            [se3_to_tf(map_to_cone_mat, self.get_clock().now(), "map", "cone")]
+        )
+        self.draw_marker(cone_x, cone_y)
+
+        try:
+            base_link_to_cone = self.tfBuffer.lookup_transform(
+                "base_link", "cone", Time()
+            )
+        except Exception as e:
+            print("(update_target) lookup_transform failed:", e)
+            return
+
+        relative_cone = ConeLocation()
+        relative_cone.x_pos = base_link_to_cone.transform.translation.x
+        relative_cone.y_pos = base_link_to_cone.transform.translation.y
+        self.cone_pub.publish(relative_cone)
+
+    def draw_marker(self, x: float, y: float):
         # modified from visual_servoing/visual_servoing/visual_servoing/cone_sim_marker.py
         marker = Marker()
         marker.header.frame_id = "map"
@@ -104,17 +128,16 @@ class ParkingTest(Node):
         marker.color.r = 1.0
         marker.color.g = 0.5
         marker.pose.orientation.w = 1.0
-        marker.pose.position.x = self.cone_x
-        marker.pose.position.y = self.cone_y
+        marker.pose.position.x = x
+        marker.pose.position.y = y
         self.cone_marker_pub.publish(marker)
 
     def drive_callback(self, msg: AckermannDriveStamped):
         self.last_drive = msg
         if self.first_drive_time is None:
             self.first_drive_time = time.time()
-        self.draw_marker()
 
-    def update(self):
+    def update_metrics(self):
         cur_time = time.time()
         time_passed = cur_time - self.prev_time
 
@@ -146,18 +169,6 @@ class ParkingTest(Node):
 
         self.prev_time = cur_time
 
-    def publish_cone(self):
-        try:
-            t = self.tfBuffer.lookup_transform("base_link", "cone", Time())
-        except Exception as e:
-            print("lookup_transform failed:", e)
-            return
-
-        relative_cone = ConeLocation()
-        relative_cone.x_pos = t.transform.translation.x
-        relative_cone.y_pos = t.transform.translation.y
-        self.cone_pub.publish(relative_cone)
-
 
 cone_pos = []
 for x in [-2.0, -1.0, 0.0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0]:
@@ -167,33 +178,33 @@ for x in [-2.0, -1.0, 0.0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0]:
         cone_pos.append((x, y))
 
 
-@pytest.mark.parametrize(
-    "cone_x,cone_y",
-    [
-        (0.75, 0.0),
-        (0.0, 0.5),
-        (0.0, -0.5),
-        (0.5, -0.5),
-        (-0.5, -0.5),
-        (5.0, -0.5),
-        (-5.0, -0.5),
-    ],
-    # cone_pos,
-)
-@pytest.mark.timeout(20)
-def test_parking(cone_x: float, cone_y: float, record_metric: metric_dict):
-    res = run_test_parking(cone_x, cone_y)
-    record_metric[(cone_x, cone_y)] = res
+# @pytest.mark.parametrize(
+#     "cone_x,cone_y",
+#     # [
+#     #     (0.75, 0.0),
+#     #     # (0.0, 0.5),
+#     #     # (0.0, -0.5),
+#     #     # (0.5, -0.5),
+#     #     # (-0.5, -0.5),
+#     #     # (5.0, -0.5),
+#     #     # (-5.0, -0.5),
+#     # ],
+#     cone_pos,
+# )
+# @pytest.mark.timeout(20)
+# def test_parking(cone_x: float, cone_y: float, record_metric: metric_dict):
+#     res = run_test_parking(cone_x, cone_y)
+#     record_metric[(cone_x, cone_y)] = res
 
 
 @isolate
-def run_test_parking(cone_x: float, cone_y: float) -> parking_metrics:
+def test_moving() -> parking_metrics:
     procs = proc_manager.new()
-    # procs.popen(["rviz2"])
+    procs.popen(["rviz2"])
     procs.ros_launch("racecar_simulator", "simulate.launch.xml")
 
-    procs.ros_node_subproc(ParkingController, parkingcontroller_config())
-    procs.ros_node_thread(ParkingTest, cone_x, cone_y)
+    procs.ros_node_subproc(ParkingController, parkingcontroller_config(0.05))
+    procs.ros_node_thread(ParkingTest)
 
     try:
         procs.spin()

@@ -36,9 +36,11 @@ class patheval(Protocol):
 
 
 class compute_score(eqx.Module):
-    parking_distance: float = 0.75
-    relative_x: float = 0.0
-    relative_y: float = 0.0
+    parking_distance: float
+    relative_x: float
+    relative_y: float
+
+    prev_a: float
 
     @jaxtyped(typechecker=typechecker)
     def calc_loss(self, p: path) -> fval:
@@ -53,16 +55,15 @@ class compute_score(eqx.Module):
         x = final_point_ahead - jnp.array([self.relative_x, self.relative_y])
         loss = jnp.sum(x**2)
 
-        def loss_len(l: fval, first: bool):
-            ans = lax.select(l > 0, l, -l * 2.0)
+        def loss_len(l: fval):
+            return lax.select(l > 0, l, -l * 2.0)
 
-            if first:
-                return ans / 120
-            else:
-                return ans / 100
+        loss_lens = jax.vmap(loss_len)(p.parts.length)
+        loss += jnp.sum(loss_lens[1:]) / 120
+        loss += loss_lens[0] / 40
 
-        for i, x in enumerate(p):
-            loss += loss_len(x.length, i == 0)
+        a1 = p.parts.angle[0]
+        loss += (a1 - self.prev_a) ** 2
 
         return loss
 
@@ -75,9 +76,9 @@ def loss_nan_cb(loss: fval, p: path):
 
 
 @jit
-def gradient_descent_one(init: path, scoring: patheval = compute_score()) -> path:
+def gradient_descent_one(init: path, scoring: patheval) -> path:
 
-    optim = optax.adamw(0.01)
+    optim = optax.adamw(learning_rate=0.1)
 
     init_pos = position(jnp.array([0.0, 0.0]), jnp.array(0.0))
 
@@ -85,6 +86,7 @@ def gradient_descent_one(init: path, scoring: patheval = compute_score()) -> pat
     def update(p: path, opt_state):
         loss, grads = jax.value_and_grad(scoring.calc_loss)(p)
         # debug_callback(loss_nan_cb, loss, p)
+        # debug_print("loss", loss)
         updates, opt_state = optim.update(grads, opt_state, p)  # type: ignore
         p = eqx.apply_updates(p, updates)
         p = p.clip()
@@ -96,7 +98,7 @@ def gradient_descent_one(init: path, scoring: patheval = compute_score()) -> pat
         lambda c, _: (update(c[0], c[1]), None),
         xs=None,
         init=(init, opt_state),
-        length=1000,
+        length=300,
     )
 
     # print(ans.move(init_pos).coord)
@@ -107,15 +109,16 @@ def gradient_descent_one(init: path, scoring: patheval = compute_score()) -> pat
     return ans
 
 
+def make_path(a: fval, l: fval):
+    seg = path_segment(a, l)
+    return path.from_parts(*(seg for _ in range(5)))
+
+
 @jit
 def gradient_descent_batched(scoring: patheval, ctx: plot_ctx) -> tuple[path, plot_ctx]:
 
     a_cands = jnp.linspace(-turn_angle_limit, turn_angle_limit, 5)
     l_cands = jnp.linspace(-math.pi / 5, math.pi / 5, 5)
-
-    def make_path(a: fval, l: fval):
-        seg = path_segment(a, l)
-        return path.from_parts(*(seg for _ in range(5)))
 
     path_cands = jax.vmap(lambda l: jax.vmap(lambda a: make_path(a, l))(a_cands))(
         l_cands
@@ -140,3 +143,14 @@ def compute(scorer: patheval):
     ctx += ans.plot()
     ctx.check()
     return ans, ctx
+
+
+@jit
+def testfn_():
+    init_p = make_path(jnp.array(0.01), jnp.array(0.1))
+
+    gradient_descent_one(init_p, compute_score(0.75, 20.0, 80.0, 0.1))
+
+
+def testfn():
+    return testfn_()
