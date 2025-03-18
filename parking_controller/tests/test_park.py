@@ -1,41 +1,17 @@
-import math
-import os
-import time
-
-import numpy as np
 import pytest
-import rclpy
 import tf2_ros
-import tf_transformations
 from ackermann_msgs.msg import AckermannDriveStamped
-from chex import dataclass
-from geometry_msgs.msg import Pose, PoseStamped, Transform
+from geometry_msgs.msg import Transform
 from rclpy.node import Node
 from rclpy.time import Time
-from tf2_ros.buffer import Buffer
-from tf2_ros.transform_listener import TransformListener
-from tf_transformations import euler_from_quaternion
 from visualization_msgs.msg import Marker
 from vs_msgs.msg import ConeLocation
 
 from libracecar.sandbox import isolate
 from libracecar.test_utils import proc_manager
-from libracecar.transforms import pose_2d, se3_to_tf, tf_to_se3
+from libracecar.transforms import se3_to_tf, tf_to_se3
 from parking_controller.main import ParkingController, parkingcontroller_config
-
-
-@dataclass
-class parking_metrics:
-    time_took: float
-    final_error_x: float
-    final_error_y: float
-    final_error: float
-    distance_traveled: float
-
-    def check(self):
-        assert np.allclose(self.final_error_x, 0.0, rtol=0.0, atol=0.1)
-        assert np.allclose(self.final_error_y, 0.0, rtol=0.0, atol=0.1)
-
+from parking_controller.metrics import metric_tracker, parking_metrics
 
 metric_dict = dict[tuple[float, float], parking_metrics]
 
@@ -83,13 +59,8 @@ class ParkingTest(Node):
             AckermannDriveStamped, "/drive", self.drive_callback, 10
         )
 
-        self.start_time = time.time()
-        self.first_drive_time: float | None = None
-        self.prev_time = self.start_time
-        self._timer = self.create_timer(0.001, self.update)
-
-        self.distance_traveled = 0.0
-        self.time_rest = 0.0
+        self.metrics = metric_tracker()
+        self._tick_timer = self.create_timer(0.001, self.tick)
 
     def draw_marker(self):
         # modified from visual_servoing/visual_servoing/visual_servoing/cone_sim_marker.py
@@ -109,42 +80,21 @@ class ParkingTest(Node):
         self.cone_marker_pub.publish(marker)
 
     def drive_callback(self, msg: AckermannDriveStamped):
-        self.last_drive = msg
-        if self.first_drive_time is None:
-            self.first_drive_time = time.time()
+        self.metrics.on_drive(msg)
         self.draw_marker()
 
-    def update(self):
-        cur_time = time.time()
-        time_passed = cur_time - self.prev_time
-
-        self.distance_traveled += self.last_drive.drive.speed * time_passed
-        if self.last_drive.drive.speed == 0.0:
-            self.time_rest += time_passed
-        else:
-            self.time_rest = 0.0
-
+    def tick(self):
+        self.metrics.tick()
         if (
-            self.first_drive_time is not None
-            and cur_time - self.first_drive_time > 0.5
-            and self.time_rest > 0.5
+            self.metrics.first_drive_time is not None
+            and self.metrics.since_first_drive > 0.5
+            and self.metrics.time_rest > 0.5
         ):
             t = self.tfBuffer.lookup_transform("base_link", "cone", Time())
-            x_err = t.transform.translation.x - 0.75
-            y_err = t.transform.translation.y
-
-            metrics = parking_metrics(
-                time_took=max(cur_time - self.first_drive_time - self.time_rest, 0.0),
-                final_error_x=x_err,
-                final_error_y=y_err,
-                final_error=math.sqrt(x_err**2 + y_err**2),
-                distance_traveled=self.distance_traveled,
+            metrics = self.metrics.finish(
+                x_err=t.transform.translation.x - 0.75, y_err=t.transform.translation.y
             )
             raise _ok(metrics)
-
-            return
-
-        self.prev_time = cur_time
 
     def publish_cone(self):
         try:
