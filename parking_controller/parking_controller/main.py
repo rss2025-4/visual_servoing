@@ -23,6 +23,7 @@ class parkingcontroller_config:
     # in other words, controller moves the car until relative_cone it recieves
     # is close to (parking_distance, 0.0), then stops.
     parking_distance: float = 0.75
+    # publish drive commands to this topic
     drive_topic: str = "/drive"
 
 
@@ -50,7 +51,7 @@ class ParkingController(Node):
         )
 
         self.prev_angle = 0.0
-
+        self.prev_speed = 0.0
         self.get_logger().info("Parking Controller Initialized")
 
     def visualize(self, ctx: plot_ctx):
@@ -68,6 +69,7 @@ class ParkingController(Node):
             relative_x=msg.x_pos,
             relative_y=msg.y_pos,
             prev_a=self.prev_angle,
+            prev_v=self.prev_speed,
         )
         return compute(scorer)
 
@@ -133,7 +135,8 @@ class ParkingController(Node):
         self.drive_pub.publish(drive_cmd)
         self.error_publisher(msg)
 
-        self.prev_angle = drive_cmd.drive.speed
+        self.prev_angle = drive_cmd.drive.steering_angle
+        self.prev_speed = drive_cmd.drive.speed
 
     def error_publisher(self, msg: ConeLocation):
         """

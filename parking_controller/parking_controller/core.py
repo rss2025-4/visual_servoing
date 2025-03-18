@@ -41,6 +41,7 @@ class compute_score(eqx.Module):
     relative_y: float
 
     prev_a: float
+    prev_v: float
 
     @jaxtyped(typechecker=typechecker)
     def calc_loss(self, p: path) -> fval:
@@ -55,16 +56,21 @@ class compute_score(eqx.Module):
         x = final_point_ahead - jnp.array([self.relative_x, self.relative_y])
         loss = jnp.sum(x**2)
 
-        def loss_len(l: fval):
-            return lax.select(l > 0, l, -l * 2.0)
+        def loss_after(l: fval):
+            return lax.select(l > 0, l, -l * 2.0) / 120
 
-        loss_lens = jax.vmap(loss_len)(p.parts.length)
-        loss += jnp.sum(loss_lens[1:]) / 120
-        loss += loss_lens[0] / 40
+        def loss_first(l: fval):
+            return lax.select(l > 0, l, -l * 2.0) / 150
+
+        loss += loss_first(p.parts.length[0])
+        loss += jnp.sum(jax.vmap(loss_after)(p.parts.length[1:]))
 
         a1 = p.parts.angle[0]
-        loss += (a1 - self.prev_a) ** 2
+        l1 = p.parts.length[0]
+        loss += ((a1 - self.prev_a) ** 2) / 1.0
 
+        f = lambda x: 1 / (1 + jnp.exp(-x))
+        loss += (f(self.prev_v) - f(l1)) ** 2 / 10.0
         return loss
 
 
@@ -149,7 +155,7 @@ def compute(scorer: patheval):
 def testfn_():
     init_p = make_path(jnp.array(0.01), jnp.array(0.1))
 
-    gradient_descent_one(init_p, compute_score(0.75, 20.0, 80.0, 0.1))
+    gradient_descent_one(init_p, compute_score(0.75, 20.0, 80.0, 0.1, 0.0))
 
 
 def testfn():
