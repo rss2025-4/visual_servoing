@@ -1,0 +1,6 @@
+[tool.isort]
+profile = "black"
+
+[tool.pyright]
+reportPrivateImportUsage = false
+typeCheckingMode = "standard"
