@@ -1,9 +1,8 @@
-import json
 import pickle
 from pathlib import Path
 
 import pytest
-from test_park import metric_dict, parking_metrics
+from test_park import metric_dict
 
 
 def pytest_configure(config: pytest.Config):

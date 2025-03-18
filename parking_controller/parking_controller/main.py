@@ -6,22 +6,24 @@ import draccus
 import numpy as np
 import rclpy
 from ackermann_msgs.msg import AckermannDrive, AckermannDriveStamped
-from jax import tree_util as jtu
 from rclpy.node import Node
 from visualization_msgs.msg import Marker
 from vs_msgs.msg import ConeLocation, ParkingError
 
 from libracecar.plot import plot_ctx
 from libracecar.specs import path
-from libracecar.utils import jit
-from parking_controller.core import compute, compute_score, patheval
+from parking_controller.core import compute, compute_score
 
 np.set_printoptions(precision=10, suppress=True)
 
 
 @dataclass
 class parkingcontroller_config:
+    # controller tries to move car so that it is parking_distance away from the target;
+    # in other words, controller moves the car until relative_cone it recieves
+    # is close to (parking_distance, 0.0), then stops.
     parking_distance: float = 0.75
+    drive_topic: str = "/drive"
 
 
 class ParkingController(Node):
@@ -36,13 +38,9 @@ class ParkingController(Node):
 
         self.cfg = cfg
 
-        self.declare_parameter("drive_topic", "/drive")
-        DRIVE_TOPIC = self.get_parameter(
-            "drive_topic"
-        ).value  # set in launch file; different for simulator vs racecar
-        assert isinstance(DRIVE_TOPIC, str)
-
-        self.drive_pub = self.create_publisher(AckermannDriveStamped, DRIVE_TOPIC, 10)
+        self.drive_pub = self.create_publisher(
+            AckermannDriveStamped, self.cfg.drive_topic, 10
+        )
         self.error_pub = self.create_publisher(ParkingError, "/parking_error", 10)
 
         self.visualization_pub = self.create_publisher(Marker, "/visualization", 10)
@@ -117,6 +115,7 @@ class ParkingController(Node):
             #     return
 
         print(ang, speed, flush=True)
+        print()
         # assert False
 
         # print(self.plan())

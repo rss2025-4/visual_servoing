@@ -12,7 +12,7 @@ from jaxtyping import jaxtyped
 
 from libracecar.plot import plot_ctx
 from libracecar.specs import path, path_segment, position, turn_angle_limit
-from libracecar.utils import debug_callback, debug_print, flatten_n_tree, fval, jit
+from libracecar.utils import flatten_n_tree, fval, jit
 
 
 class patheval(Protocol):
