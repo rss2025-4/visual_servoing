@@ -107,7 +107,6 @@ def cd_color_segmentation(img, template):
 	# image_print(segmented_mask)
 
 	contours, _ = cv2.findContours(segmented_mask,  
-	contours, _ = cv2.findContours(segmented_mask,  
     cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 	largest_contour = max(contours, key=cv2.contourArea)
 	# print(contours[0].shape)
