@@ -1,6 +1,8 @@
 import math
 import time
+from dataclasses import dataclass
 
+import draccus
 import numpy as np
 import rclpy
 from ackermann_msgs.msg import AckermannDrive, AckermannDriveStamped
@@ -17,6 +19,11 @@ from parking_controller.core import compute, compute_score, patheval
 np.set_printoptions(precision=10, suppress=True)
 
 
+@dataclass
+class parkingcontroller_config:
+    parking_distance: float = 0.75
+
+
 class ParkingController(Node):
     """
     A controller for parking in front of a cone.
@@ -24,8 +31,10 @@ class ParkingController(Node):
     Can be used in the simulator and on the real robot.
     """
 
-    def __init__(self):
+    def __init__(self, cfg: parkingcontroller_config):
         super().__init__("parking_controller")
+
+        self.cfg = cfg
 
         self.declare_parameter("drive_topic", "/drive")
         DRIVE_TOPIC = self.get_parameter(
@@ -42,9 +51,7 @@ class ParkingController(Node):
             ConeLocation, "/relative_cone", self.relative_cone_callback, 1
         )
 
-        self.parking_distance = 0.75  # meters; try playing with this number!
-        self.relative_x = 0
-        self.relative_y = 0
+        self.prev_angle = 0.0
 
         self.get_logger().info("Parking Controller Initialized")
 
@@ -59,18 +66,16 @@ class ParkingController(Node):
 
     def plan(self, msg: ConeLocation) -> tuple[path, plot_ctx]:
         scorer = compute_score(
-            parking_distance=self.parking_distance,
+            parking_distance=self.cfg.parking_distance,
             relative_x=msg.x_pos,
             relative_y=msg.y_pos,
+            prev_a=self.prev_angle,
         )
         return compute(scorer)
 
     def relative_cone_callback(self, msg: ConeLocation):
         print("relative_cone_callback!")
-        self.relative_x = msg.x_pos
-        self.relative_y = msg.y_pos
-
-        print("cone", self.relative_x, self.relative_y)
+        print("cone", msg.x_pos, msg.y_pos)
 
         _start_time = time.time()
         plan, ctx = self.plan(msg)
@@ -129,6 +134,8 @@ class ParkingController(Node):
         self.drive_pub.publish(drive_cmd)
         self.error_publisher(msg)
 
+        self.prev_angle = drive_cmd.drive.speed
+
     def error_publisher(self, msg: ConeLocation):
         """
         Publish the error between the car and the cone. We will view this
@@ -137,15 +144,16 @@ class ParkingController(Node):
         error_msg = ParkingError()
         x_pos = msg.x_pos
         y_pos = msg.y_pos
-        error_msg.x_error = abs(self.parking_distance - msg.x_pos)
+        error_msg.x_error = abs(self.cfg.parking_distance - msg.x_pos)
         error_msg.y_error = abs(msg.y_pos)
         error_msg.distance_error = error_msg.x_error**2 + error_msg.y_error**2
 
         self.error_pub.publish(error_msg)
 
 
-def main(args=None):
-    rclpy.init(args=args)
-    pc = ParkingController()
+@draccus.wrap()
+def main(cfg: parkingcontroller_config):
+    rclpy.init()
+    pc = ParkingController(cfg)
     rclpy.spin(pc)
     rclpy.shutdown()

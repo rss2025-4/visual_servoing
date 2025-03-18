@@ -60,7 +60,7 @@ def main():
         @functools.cache
         def map_commit(cur: Commit) -> Oid:
             print("map_commit", cur.short_id, cur.message.splitlines()[0])
-            tree_builder = repo.TreeBuilder(cur.tree)
+            tree_builder = repo.TreeBuilder()
             tree_builder.insert(name, cur.tree.id, pygit2.enums.FileMode.TREE)
             return repo.create_commit(
                 None,

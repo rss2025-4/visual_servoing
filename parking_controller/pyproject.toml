@@ -9,6 +9,7 @@ python = ">=3.10, <3.11"
 libracecar = { git = "https://github.com/rss2025-4/libracecar.git" }
 pytest-timeout = "^2.3.1"
 matplotlib = "^3.10.1"
+draccus = "^0.10.0"
 
 [tool.isort]
 profile = "black"
@@ -17,3 +18,4 @@ known_first_party = ["libracecar"]
 [tool.pyright]
 exclude = ["**/result*"]
 typeCheckingMode = "basic"
+reportPrivateImportUsage = false
