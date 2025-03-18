@@ -42,7 +42,7 @@ python run.py  # runs parking_controller node
 	- go to: http://localhost:6081/vnc.html?resize=remote
 - To see if camera is working:  In the terminal: `rqt_image_view` then go to Plug-ins > Visualizations > Image_viewer. Then select `/zed/zed_node/rgb/image_rect_color` as the image topic.
 - Cone-detector: Using rviz2, we can also Add (bottom left) a topic to view: select the `/cone_debug_img` topic which shows bounding box and what the cone detector sees
-- Homography-transformer: prints the x,y distance values in the terminal that the node was run in
+- Homography-transformer: prints the x,y distance values in the terminal that the node was run in. Using rviz2, we can also add the `/cone_marker` topic. make sure we are in the `cone_marker` frame, add the TF, view in the zed camera link fixed frame, to see where the cone is relative to the camera. 
 - Parking-controller: prints the speed and angle nav commands
 ---
 ## Module Descriptions and Debugging 
@@ -55,10 +55,10 @@ how do we debug this?
 - how to see each filter's result?
 
 
-### Cone Detector: Template Matching and SIFT  @Eghosa
+### Cone Detector: Template Matching and SIFT  (@Eghosa)
 We aren't using this for the final system, but maybe add a description of the key functions (like opencv calls or things you did
 
-### Homography Transformer
+### Homography Transformer (@Adelene)
 **Description:**
 - Uses pre-collected values of pixel points and physical x,y distances to create a homography transformer
 - Applies homography matrix and scaling to pixel point to output x,y distance
@@ -69,8 +69,9 @@ We aren't using this for the final system, but maybe add a description of the ke
 5. In the `homography_transformer.py`, make sure `self.mouse_px_sub = self.create_subscription(Point, "/zed/zed_node/rgb/image_rect_color_mouse_left", self.mouse_detection_callback, 1)` is uncommented. This allows for clicking on a point and then printing the homography result in the callback.
 6. Run the node `ros2 run visual_servoing homography_transformer` in a terminal (in docker).
 7. After clicking on a point in the image (make sure that it is on the ground plane, aka floor). You can check that the point was clicked by opening a terminal and `ros2 topic echo /zed/zed_node/rgb/image_rect_color_mouse_left`. The homography_transformer node should print the "x, y" values representing distances in meters.
-8. Use a measuring tape to verify the actual distances from camera to the selected point. Remember x is forward and y is to the left relative to the racecar
-**What to change**
+8. Use a measuring tape to verify the actual distances from camera to the selected point. Remember x is forward and y is to the left relative to the racecar. 
+
+**What to change / what to do if not working: **
 - if the homography transformer is not returning the right physical distances, the camera may need to be re-calibrated by taking more pixel and physical distance correspondences and changing the `PTS_IMAGE_PLANE` and `PTS_GROUND_PLANE` points.
 - possible reasons for failure: camera moved significantly (remember the key assumption with this calculation is that the camera relative to the floor plane are fixed)
 
