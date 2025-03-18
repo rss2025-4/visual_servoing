@@ -1,4 +1,90 @@
+# Lab 4 - Team 4 Documentation
 
+## How to Run
+### Launching the ZED Camera
+```bash
+# on the car (open docker, if not already)
+./run_rostorch.sh
+
+# in another terminal
+connect
+
+# "unsets the `DISPLAY` environment variable, which is necessary for running the ZED in a "headless" environment (i.e. via SSH without display port forwarding)"
+unset DISPLAY  # (only if you did not add this command to your ~/.bashrc file)
+
+# for ZED:
+ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed
+```
+### Racecar Movement
+In a terminal, run `teleop`
+
+### Launching our Lab 4 components
+#### Homography Transformer 
+In one terminal: `ros2 run visual_servoing homography_transformer`
+- Description: takes in `\relative_cone_px` pixel and outputs `\relative_cone` x,y distance
+#### Cone Detector
+Another terminal: `ros2 run visual_servoing cone_detector` 
+
+Side note: we can make a launch file to launch both of these (to-do item)
+
+### Parking Controller
+```bash
+~/repos/dotfiles-alan/scripts/docker_attach.py # opens docker 
+cd ~/racecar_ws/src/visual_servoing/parking_controller # basically where the package is
+poetry shell # sets up virtual environment
+poetry install # installs packages
+python run.py  # runs parking_controller node
+```
+
+## Integration Debugging
+- Use display
+	- in a terminal, ssh -L 6081:localhost:6081 racecar@192.168.1.21
+	- go to: http://localhost:6081/vnc.html?resize=remote
+- To see if camera is working:  In the terminal: `rqt_image_view` then go to Plug-ins > Visualizations > Image_viewer. Then select `/zed/zed_node/rgb/image_rect_color` as the image topic.
+- Cone-detector: Using rviz2, we can also Add (bottom left) a topic to view: select the `/cone_debug_img` topic which shows bounding box and what the cone detector sees
+- Homography-transformer: prints the x,y distance values in the terminal that the node was run in
+- Parking-controller: prints the speed and angle nav commands
+---
+## Module Descriptions and Debugging 
+### Cone Detector: Color segmentation (@Paul)
+**Description:**
+maybe describe each filter used and purpose?
+where could things be tuned?
+**Debug:**
+how do we debug this? 
+- how to see each filter's result?
+
+
+### Cone Detector: Template Matching and SIFT  @Eghosa
+We aren't using this for the final system, but maybe add a description of the key functions (like opencv calls or things you did
+
+### Homography Transformer
+**Description:**
+- Uses pre-collected values of pixel points and physical x,y distances to create a homography transformer
+- Applies homography matrix and scaling to pixel point to output x,y distance
+**Debug / Individual Module Test**
+1. Make sure camera is running and then open display () then open terminal in the vnc
+2. In the terminal: `rqt_image_view` then go to Plug-ins > Visualizations > Image
+3. Select `/zed/zed_node/rgb/image_rect_color` as the image topic. Below that option, select the check mark so that `/zed/zed_node/rgb/image_rect_color_mouse_left` which allows for a mouse clicked point on the image in `rqt_image_view` to be published.
+5. In the `homography_transformer.py`, make sure `self.mouse_px_sub = self.create_subscription(Point, "/zed/zed_node/rgb/image_rect_color_mouse_left", self.mouse_detection_callback, 1)` is uncommented. This allows for clicking on a point and then printing the homography result in the callback.
+6. Run the node `ros2 run visual_servoing homography_transformer` in a terminal (in docker).
+7. After clicking on a point in the image (make sure that it is on the ground plane, aka floor). You can check that the point was clicked by opening a terminal and `ros2 topic echo /zed/zed_node/rgb/image_rect_color_mouse_left`. The homography_transformer node should print the "x, y" values representing distances in meters.
+8. Use a measuring tape to verify the actual distances from camera to the selected point. Remember x is forward and y is to the left relative to the racecar
+**What to change**
+- if the homography transformer is not returning the right physical distances, the camera may need to be re-calibrated by taking more pixel and physical distance correspondences and changing the `PTS_IMAGE_PLANE` and `PTS_GROUND_PLANE` points.
+- possible reasons for failure: camera moved significantly (remember the key assumption with this calculation is that the camera relative to the floor plane are fixed)
+
+### Parking Controller @ Alan
+**Description:**
+- takes in x,y distances from homography transformer and returns navigation commands
+- what kind of algorithm at the high level? 
+**Key Functions**
+- what is the expected behvavior? what do the functions pass to each other? maybe describe key functions?
+- where can we change things if something isn't working? 
+**Debug**
+- how do we debug?
+
+--- 
 # Lab 4: Vision
 
 | Deliverable | Due Date              |
