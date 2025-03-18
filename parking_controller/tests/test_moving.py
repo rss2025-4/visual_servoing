@@ -80,14 +80,6 @@ class ParkingTest(Node):
         self.cone_marker_pub.publish(marker)
 
 
-cone_pos = []
-for x in [-2.0, -1.0, 0.0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0]:
-    # for x in [0.5]:
-    for y in [-0.1, 0.0, 0.1, 0.2, 0.3, 0.5, 0.75, 1.0, 1.5]:
-        # for y in [0.2]:
-        cone_pos.append((x, y))
-
-
 @isolate
 def test_moving():
     procs = proc_manager.new()

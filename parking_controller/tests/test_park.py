@@ -139,7 +139,7 @@ def test_parking(cone_x: float, cone_y: float, record_metric: metric_dict):
 @isolate
 def run_test_parking(cone_x: float, cone_y: float) -> parking_metrics:
     procs = proc_manager.new()
-    # procs.popen(["rviz2"])
+    procs.popen(["rviz2"])
     procs.ros_launch("racecar_simulator", "simulate.launch.xml")
 
     procs.ros_node_subproc(ParkingController, parkingcontroller_config())
