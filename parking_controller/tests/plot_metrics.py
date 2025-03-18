@@ -1,11 +1,9 @@
-import json
 import pickle
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import pytest
 from mpl_toolkits.mplot3d import Axes3D
-from test_park import metric_dict, parking_metrics
+from test_park import metric_dict
 
 
 def main():
