@@ -25,7 +25,7 @@ def image_print(img):
 	# cv2.waitKey(0)
 	# cv2.destroyAllWindows()
 
-def cd_color_segmentation(img, template):
+def cd_color_segmentation(img, template, line_follow=False):
 	"""
 	Implement the cone detection using color segmentation algorithm
 	Input:
@@ -41,7 +41,13 @@ def cd_color_segmentation(img, template):
 	orange_lower = np.array([0,225,140])
 	orange_upper = np.array([30,300,300])
 	bounding_box = ((0,0),(0,0))
-	
+	if line_follow:
+		print(len(img[0]))
+		print(len(img))
+		# img = img[200:400, :]
+		output = np.zeros_like(img)
+		output[120:240, :] = img[120:240, :]
+		image_print(output)
 	# image_print(img)
 	image_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
@@ -70,24 +76,7 @@ def cd_color_segmentation(img, template):
 	sure_fg = np.uint8(sure_fg)
 	# image_print(sure_fg)
     # overlap
-	unknown = cv2.subtract(image_orange, sure_fg)
-	# image_print(unknown)
-    # connected
-	_, markers = cv2.connectedComponents(sure_fg)
-	markers = markers + 1 
-	markers[unknown == 255] = 0
-	# image_print(sure_fg)
-    # watershed
-	markers = cv2.watershed(img, markers)
-	img[markers == -1] = [255, 0, 0] 
-	image_orange = cv2.dilate(image_orange, kernel, iterations=11)
-	# image_print(image_orange)
-	# distance transform
-	dist_transform = cv2.distanceTransform(image_orange, cv2.DIST_L2, 5)
-	ret, sure_fg = cv2.threshold(dist_transform, 0.7 * dist_transform.max(), 255, 0)
-	sure_fg = np.uint8(sure_fg)
-	# image_print(sure_fg)
-    # overlap
+	# print(image_orange)
 	unknown = cv2.subtract(image_orange, sure_fg)
 	# image_print(unknown)
     # connected
@@ -141,8 +130,8 @@ def cd_color_segmentation(img, template):
 	########### YOUR CODE ENDS HERE ###########
 
 	return bounding_box
-# test_im = cv2.imread('/Users/paul/racecar_docker/home/racecar_ws/src/visual_servoing/visual_servoing/visual_servoing/computer_vision/test_images_cone/tape_test.png')
-# cd_color_segmentation(test_im, None)
+test_im = cv2.imread('/Users/paul/racecar_docker/home/racecar_ws/src/visual_servoing/visual_servoing/visual_servoing/computer_vision/test_images_cone/tape_test.png')
+cd_color_segmentation(test_im, None, True)
 # test_im = cv2.imread('/Users/paul/racecar_docker/home/racecar_ws/src/visual_servoing/visual_servoing/visual_servoing/computer_vision/test_images_cone/tape_test.png')
 # cd_color_segmentation(test_im, None)
 
@@ -175,5 +164,5 @@ def optimize():
 		print("Subprocess timed out.")
 
 if __name__ == '__main__':
-	print(optimize())
+	# print(optimize())
 	pass
