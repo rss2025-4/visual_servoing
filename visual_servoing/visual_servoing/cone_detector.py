@@ -34,7 +34,7 @@ class ConeDetector(Node):
         self.bridge = CvBridge() # Converts between ROS images and OpenCV Images
 
         self.get_logger().info("Cone Detector Initialized")
-        self.Line_follow = True
+        self.line_follow = True
 
     def image_callback(self, image_msg):
         # Apply your imported color segmentation function (cd_color_segmentation) to the image msg here
