@@ -69,7 +69,7 @@ class ParkingController(Node):
     def plan(self, msg: ConeLocation) -> tuple[path, plot_ctx]:
         scorer = compute_score(
             parking_distance=self.cfg.parking_distance,
-            relative_x=msg.x_pos,
+            relative_x=max(0.5,msg.x_pos),
             relative_y=msg.y_pos,
             prev_a=self.prev_angle,
             prev_v=self.prev_speed,

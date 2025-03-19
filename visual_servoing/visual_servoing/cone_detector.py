@@ -25,7 +25,7 @@ class ConeDetector(Node):
     def __init__(self):
         super().__init__("cone_detector")
         # toggle line follower vs cone parker
-        self.LineFollower = False
+        self.LineFollower = True
 
         # Subscribe to ZED camera RGB frames
         self.cone_pub = self.create_publisher(ConeLocationPixel, "/relative_cone_px", 10)
@@ -34,7 +34,7 @@ class ConeDetector(Node):
         self.bridge = CvBridge() # Converts between ROS images and OpenCV Images
 
         self.get_logger().info("Cone Detector Initialized")
-        self.line_follow = True
+        self.line_follow = False
 
     def image_callback(self, image_msg):
         # Apply your imported color segmentation function (cd_color_segmentation) to the image msg here
@@ -45,7 +45,6 @@ class ConeDetector(Node):
 
         image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
         try:
-
             box = cd_color_segmentation(image, None, self.line_follow)
             center_w = int((box[0][0] + (box[1][0]-box[0][0])/2))
             # center_h = int((box[0][1] + (box[1][1]-box[0][1])/2))

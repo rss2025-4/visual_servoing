@@ -38,17 +38,18 @@ def cd_color_segmentation(img, template, line_follow=False):
 	########## YOUR CODE STARTS HERE ##########
 
 	# Best test score(so far): [0,225,140] --> (30,300,300)
-	orange_lower = np.array([0,225,140])
+	orange_lower = np.array([0,120,140])
 	orange_upper = np.array([30,300,300])
 	bounding_box = ((0,0),(0,0))
 	if line_follow:
-		print(len(img[0]))
-		print(len(img))
+		# print(len(img[0]))
+		# print(len(img))
 		# img = img[200:400, :]
 		output = np.zeros_like(img)
-		output[120:240, :] = img[120:240, :]
-		image_print(output)
-	# image_print(img)
+		output[120:330, :] = img[120:240, :]
+		img = output
+	# 	image_print(output)
+	# # image_print(img)
 	image_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
 	# image_print(img)
@@ -130,8 +131,8 @@ def cd_color_segmentation(img, template, line_follow=False):
 	########### YOUR CODE ENDS HERE ###########
 
 	return bounding_box
-test_im = cv2.imread('/Users/paul/racecar_docker/home/racecar_ws/src/visual_servoing/visual_servoing/visual_servoing/computer_vision/test_images_cone/tape_test.png')
-cd_color_segmentation(test_im, None, True)
+# test_im = cv2.imread('/Users/paul/racecar_docker/home/racecar_ws/src/visual_servoing/visual_servoing/visual_servoing/computer_vision/test_images_cone/tape_test.png')
+# cd_color_segmentation(test_im, None, True)
 # test_im = cv2.imread('/Users/paul/racecar_docker/home/racecar_ws/src/visual_servoing/visual_servoing/visual_servoing/computer_vision/test_images_cone/tape_test.png')
 # cd_color_segmentation(test_im, None)
 
