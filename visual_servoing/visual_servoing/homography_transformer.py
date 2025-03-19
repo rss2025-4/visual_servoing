@@ -92,7 +92,7 @@ class HomographyTransformer(Node):
 
         #Call to main function
         x, y = self.transformUvToXy(u, v)
-
+        print("u,v in cone callback: ", u,v)
         print("x,y in cone callback: ", x,y)
 
         #Publish relative xy position of object in real world

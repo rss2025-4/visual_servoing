@@ -1,6 +1,7 @@
 import math
 import time
 from dataclasses import dataclass
+from pathlib import Path
 
 import draccus
 import numpy as np
@@ -16,6 +17,8 @@ from parking_controller.core import compute, compute_score
 
 np.set_printoptions(precision=10, suppress=True)
 
+is_sim = Path("/home/sim_ws").exists()
+
 
 @dataclass
 class parkingcontroller_config:
@@ -23,7 +26,8 @@ class parkingcontroller_config:
     # in other words, controller moves the car until relative_cone it recieves
     # is close to (parking_distance, 0.0), then stops.
     parking_distance: float = 0.75
-    drive_topic: str = "/drive"
+    # publish drive commands to this topic
+    drive_topic: str = "/drive" if is_sim else "/vesc/high_level/input/nav_0"
 
 
 class ParkingController(Node):
@@ -50,7 +54,7 @@ class ParkingController(Node):
         )
 
         self.prev_angle = 0.0
-
+        self.prev_speed = 0.0
         self.get_logger().info("Parking Controller Initialized")
 
     def visualize(self, ctx: plot_ctx):
@@ -68,6 +72,7 @@ class ParkingController(Node):
             relative_x=msg.x_pos,
             relative_y=msg.y_pos,
             prev_a=self.prev_angle,
+            prev_v=self.prev_speed,
         )
         return compute(scorer)
 
@@ -133,7 +138,8 @@ class ParkingController(Node):
         self.drive_pub.publish(drive_cmd)
         self.error_publisher(msg)
 
-        self.prev_angle = drive_cmd.drive.speed
+        self.prev_angle = drive_cmd.drive.steering_angle
+        self.prev_speed = drive_cmd.drive.speed
 
     def error_publisher(self, msg: ConeLocation):
         """
@@ -143,8 +149,8 @@ class ParkingController(Node):
         error_msg = ParkingError()
         x_pos = msg.x_pos
         y_pos = msg.y_pos
-        error_msg.x_error = abs(self.cfg.parking_distance - msg.x_pos)
-        error_msg.y_error = abs(msg.y_pos)
+        error_msg.x_error = abs(self.cfg.parking_distance - x_pos)
+        error_msg.y_error = abs(y_pos)
         error_msg.distance_error = error_msg.x_error**2 + error_msg.y_error**2
 
         self.error_pub.publish(error_msg)
