@@ -97,7 +97,7 @@ class HomographyTransformer(Node):
 
         #Publish relative xy position of object in real world
         relative_xy_msg = ConeLocation()
-        relative_xy_msg.x_pos = x
+        relative_xy_msg.x_pos = max(x,0.5)
         relative_xy_msg.y_pos = y
 
         self.cone_pub.publish(relative_xy_msg)

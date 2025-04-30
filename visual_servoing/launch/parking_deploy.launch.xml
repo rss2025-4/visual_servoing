@@ -16,5 +16,5 @@
   </node>
 
   <node pkg="image_transport" name="republish" exec="republish" args="raw in:=/cone_debug_img out:=/cone_debug_img_compressed" output="screen"></node>
-
+  <!-- ros doc - include launch file in launch file -->
 </launch>
